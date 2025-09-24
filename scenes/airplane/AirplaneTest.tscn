@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://c8x9m2n4p5q6r"]
+
+[ext_resource type="PackedScene" uid="uid://bvqxj8n3qwxhm" path="res://scenes/airplane/BasicAirplane.tscn" id="1_airplane"]
+[ext_resource type="Script" path="res://scripts/components/AirplaneTestController.gd" id="2_test_controller"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(50, 1, 50)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(50, 1, 50)
+
+[node name="AirplaneTest" type="Node3D"]
+script = ExtResource("2_test_controller")
+
+[node name="BasicAirplane" parent="." instance=ExtResource("1_airplane")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
+
+[node name="Ground" type="StaticBody3D" parent="." groups=["ground"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("BoxMesh_ground")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("BoxShape3D_ground")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 10, 10)
+fov = 60.0

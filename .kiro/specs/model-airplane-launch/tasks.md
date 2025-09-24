@@ -9,7 +9,7 @@
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
 - [ ] 2. Create basic airplane and physics foundation
-  - [ ] 2.1 Create simple airplane RigidBody3D with basic physics
+  - [x] 2.1 Create simple airplane RigidBody3D with basic physics
     - Write BasicAirplane class extending RigidBody3D with mesh and collision shape
     - Implement basic weight and drag properties for initial flight testing
     - Create simple airplane scene with fuselage and wing meshes
