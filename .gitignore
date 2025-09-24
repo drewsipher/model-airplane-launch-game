@@ -1,3 +1,52 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Godot-specific ignores
+.import/
+export.cfg
+export_presets.cfg.bak
+*.tmp
+*.bak
+*.swp
+*~
+
+# Build outputs
+builds/
+dist/
+*.apk
+*.aab
+*.exe
+*.dmg
+*.zip
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+Thumbs.db
+
+# Logs and debug files
+*.log
+debug.log
+crash_handler_*.txt
+
+# Temporary files
+temp/
+tmp/
+*.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Development and testing
+test_builds/
+screenshots/
+recordings/
