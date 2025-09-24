@@ -126,8 +126,9 @@ func release_pull() -> void:
 	
 	# Launch the airplane
 	if airplane:
+		var airplane_to_launch = airplane  # Store reference before detaching
 		detach_airplane()
-		airplane.launch_airplane(launch_velocity)
+		airplane_to_launch.launch_airplane(launch_velocity)
 		airplane_launched.emit(launch_velocity)
 	
 	# Reset visual feedback

@@ -5,7 +5,7 @@ extends Node3D
 
 @onready var launcher = $ElasticBandLauncher
 @onready var airplane = $BasicAirplane
-@onready var camera: Camera3D = $FlightCamera
+@onready var flight_camera = $FlightCamera
 @onready var ui_label: Label = $UI/FlightInfo
 
 # Test parameters
@@ -39,6 +39,7 @@ var test_scenarios: Array[Dictionary] = [
 var current_scenario_index: int = 0
 var is_flight_active: bool = false
 var flight_start_time: float = 0.0
+var launch_point: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	print("=== Flight Test Controller Started ===")
@@ -48,10 +49,12 @@ func _ready() -> void:
 		launcher.airplane_launched.connect(_on_airplane_launched)
 		launcher.pull_updated.connect(_on_pull_updated)
 	
-	# Position camera for good view
-	if camera:
-		camera.position = Vector3(0, 3, 8)
-		camera.look_at(Vector3.ZERO, Vector3.UP)
+	# Set up flight camera
+	if flight_camera:
+		flight_camera.set_target_airplane(airplane)
+		flight_camera.set_launch_view()
+		flight_camera.camera_mode_changed.connect(_on_camera_mode_changed)
+		flight_camera.distance_updated.connect(_on_distance_updated)
 	
 	# Set up airplane
 	reset_airplane()
@@ -133,10 +136,11 @@ func reset_airplane() -> void:
 	airplane.angular_velocity = Vector3.ZERO
 	airplane.freeze = false
 	
-	# Reset camera
-	if camera:
-		camera.position = Vector3(0, 3, 8)
-		camera.look_at(Vector3.ZERO, Vector3.UP)
+	# Reset camera to launch view
+	if flight_camera:
+		flight_camera.set_target_airplane(airplane)
+		flight_camera.set_launch_view()
+		flight_camera.reset_distance_tracking()
 	
 	print("Airplane reset")
 	update_ui_display()
@@ -164,6 +168,13 @@ func _on_airplane_launched(velocity: Vector3) -> void:
 	"""Handle airplane launch event"""
 	is_flight_active = true
 	flight_start_time = Time.get_time_dict_from_system().second
+	launch_point = airplane.global_position
+	
+	# Switch camera to flight tracking mode
+	if flight_camera:
+		flight_camera.reset_distance_tracking()
+		flight_camera.start_flight_tracking()
+	
 	print("Flight started with velocity: ", velocity)
 
 func _on_pull_updated(distance: float, force: float) -> void:
@@ -171,31 +182,36 @@ func _on_pull_updated(distance: float, force: float) -> void:
 	# This could be used for visual feedback during pull
 	pass
 
+func _on_camera_mode_changed(new_mode) -> void:
+	"""Handle camera mode changes"""
+	print("Camera mode changed to: ", new_mode)
+
+func _on_distance_updated(distance: float, max_distance: float) -> void:
+	"""Handle distance measurement updates"""
+	# Distance information is automatically included in UI updates
+	pass
+
 func _process(_delta: float) -> void:
 	# Update flight tracking
 	if is_flight_active and airplane:
-		# Follow airplane with camera
-		_update_flight_camera()
-		
 		# Check if flight ended
 		if not airplane.is_flying:
-			is_flight_active = false
-			print("Flight ended")
+			_on_flight_ended()
 		
 		# Update UI with flight data
 		update_ui_display()
 
-func _update_flight_camera() -> void:
-	"""Update camera to follow airplane during flight"""
-	if not airplane or not camera:
-		return
+func _on_flight_ended() -> void:
+	"""Handle flight ending"""
+	is_flight_active = false
 	
-	# Smooth camera following
-	var target_position = airplane.global_position + Vector3(0, 2, 5)
-	camera.global_position = camera.global_position.lerp(target_position, 0.02)
+	# Switch camera back to launch view after a delay
+	if flight_camera:
+		# Wait a moment before switching back to launch view
+		await get_tree().create_timer(2.0).timeout
+		flight_camera.stop_flight_tracking()
 	
-	# Look at airplane
-	camera.look_at(airplane.global_position, Vector3.UP)
+	print("Flight ended")
 
 func update_ui_display() -> void:
 	"""Update UI with current status and flight information"""
@@ -218,6 +234,12 @@ func update_ui_display() -> void:
 		ui_text += "Speed: %.1f m/s\n" % flight_data.speed
 		ui_text += "Altitude: %.1f m\n" % flight_data.altitude
 		
+		# Add distance information from flight camera
+		if flight_camera:
+			var distance_data = flight_camera.get_flight_distance_data()
+			ui_text += "Distance: %.1f m\n" % distance_data.current_distance
+			ui_text += "Max Distance: %.1f m\n" % distance_data.max_distance
+		
 		if flight_data.has("is_stalled"):
 			ui_text += "Stalled: %s\n" % ("Yes" if flight_data.is_stalled else "No")
 		
@@ -229,6 +251,12 @@ func update_ui_display() -> void:
 			ui_text += "Drag: %.2f N\n" % aero_info.get("drag_magnitude", 0)
 	else:
 		ui_text += "=== READY TO LAUNCH ===\n"
+		
+		# Show max distance from previous flight if available
+		if flight_camera:
+			var distance_data = flight_camera.get_flight_distance_data()
+			if distance_data.max_distance > 0:
+				ui_text += "Last Max Distance: %.1f m\n" % distance_data.max_distance
 	
 	ui_text += "\n=== CONTROLS ===\n"
 	ui_text += "SPACE - Launch\n"

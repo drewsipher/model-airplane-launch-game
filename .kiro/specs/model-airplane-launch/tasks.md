@@ -21,14 +21,14 @@
     - Create simple flight behavior that responds to airplane orientation
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 3. Build elastic band launcher and basic controls
+- [x] 3. Build elastic band launcher and basic controls
   - [x] 3.1 Create ElasticBandLauncher with simple controls
     - Implement elastic band launcher scene with visual feedback
     - Write basic input handling for pull-back and release mechanism
     - Create launch physics that applies initial velocity to airplane
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 3.2 Implement basic flight camera and tracking
+  - [x] 3.2 Implement basic flight camera and tracking
     - Create FlightCamera that smoothly follows the airplane during flight
     - Write camera switching between launch view and flight tracking
     - Implement basic distance measurement from launch point

@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/FlightTestController.gd" id="1_flight_test"]
 [ext_resource type="PackedScene" uid="uid://bvqxj8n3qwxhm" path="res://scenes/airplane/BasicAirplane.tscn" id="2_airplane"]
 [ext_resource type="Script" path="res://scripts/components/ElasticBandLauncher.gd" id="3_launcher"]
+[ext_resource type="Script" path="res://scripts/components/FlightCamera.gd" id="4_flight_camera"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_launcher_base"]
 size = Vector3(0.5, 0.2, 1.0)
@@ -39,6 +40,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 
 [node name="FlightCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 3, 8)
+script = ExtResource("4_flight_camera")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 5, 0)
