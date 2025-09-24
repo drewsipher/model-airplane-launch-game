@@ -8,7 +8,7 @@
   - Set up mobile-optimized rendering settings and input map
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 2. Create basic airplane and physics foundation
+- [x] 2. Create basic airplane and physics foundation
   - [x] 2.1 Create simple airplane RigidBody3D with basic physics
     - Write BasicAirplane class extending RigidBody3D with mesh and collision shape
     - Implement basic weight and drag properties for initial flight testing
@@ -22,7 +22,7 @@
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
 - [ ] 3. Build elastic band launcher and basic controls
-  - [ ] 3.1 Create ElasticBandLauncher with simple controls
+  - [x] 3.1 Create ElasticBandLauncher with simple controls
     - Implement elastic band launcher scene with visual feedback
     - Write basic input handling for pull-back and release mechanism
     - Create launch physics that applies initial velocity to airplane

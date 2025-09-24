@@ -13,7 +13,7 @@ config_version=5
 config/name="Model Airplane Launch"
 config/description="A 3D physics-based model airplane building and launching game"
 config/version="1.0.0"
-run/main_scene="res://scenes/TestMain.tscn"
+run/main_scene="res://scenes/FlightTest.tscn"
 config/features=PackedStringArray("4.5", "Mobile")
 config/icon="res://icon.svg"
 

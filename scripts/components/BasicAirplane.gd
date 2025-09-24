@@ -21,17 +21,18 @@ extends RigidBody3D
 @onready var wing_right_mesh_node: MeshInstance3D = $WingRightMesh
 
 # Flight physics system
-var flight_physics: FlightPhysics
+var flight_physics
 
 # Flight state tracking
 var flight_velocity: Vector3 = Vector3.ZERO
 var is_flying: bool = false
 var is_stalled: bool = false
-var current_aerodynamic_data: FlightPhysics.AerodynamicData
+var current_aerodynamic_data
 
 func _ready() -> void:
 	# Initialize flight physics system
-	flight_physics = FlightPhysics.new()
+	var flight_physics_script = load("res://scripts/components/FlightPhysics.gd")
+	flight_physics = flight_physics_script.new()
 	add_child(flight_physics)
 	
 	# Set up physics properties
