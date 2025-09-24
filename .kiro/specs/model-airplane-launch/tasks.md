@@ -15,7 +15,7 @@
     - Create simple airplane scene with fuselage and wing meshes
     - _Requirements: 4.1, 4.2_
 
-  - [ ] 2.2 Implement basic flight physics system
+  - [x] 2.2 Implement basic flight physics system
     - Write FlightPhysics class with lift and drag calculations
     - Implement gravity and basic aerodynamic forces in `_integrate_forces()`
     - Create simple flight behavior that responds to airplane orientation

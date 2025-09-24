@@ -2,12 +2,13 @@ class_name BasicAirplane
 extends RigidBody3D
 
 ## Basic airplane physics body with weight and drag properties
-## Implements simple flight physics for initial testing
+## Uses FlightPhysics system for realistic aerodynamic simulation
 
 @export_group("Physics Properties")
 @export var airplane_weight: float = 50.0  # Weight in grams
 @export var drag_coefficient: float = 0.02  # Basic drag coefficient
 @export var lift_coefficient: float = 0.1   # Basic lift coefficient
+@export var is_unbalanced: bool = false     # For testing unbalanced flight behavior
 
 @export_group("Visual Components")
 @export var fuselage_mesh: MeshInstance3D
@@ -19,21 +20,23 @@ extends RigidBody3D
 @onready var wing_left_mesh_node: MeshInstance3D = $WingLeftMesh
 @onready var wing_right_mesh_node: MeshInstance3D = $WingRightMesh
 
-# Physics constants
-const GRAVITY_SCALE: float = 1.0
-const AIR_DENSITY: float = 1.225  # kg/m³ at sea level
+# Flight physics system
+var flight_physics: FlightPhysics
 
 # Flight state tracking
 var flight_velocity: Vector3 = Vector3.ZERO
 var is_flying: bool = false
+var is_stalled: bool = false
+var current_aerodynamic_data: FlightPhysics.AerodynamicData
 
 func _ready() -> void:
+	# Initialize flight physics system
+	flight_physics = FlightPhysics.new()
+	add_child(flight_physics)
+	
 	# Set up physics properties
 	mass = airplane_weight / 1000.0  # Convert grams to kg
-	gravity_scale = GRAVITY_SCALE
-	
-	# Enable physics processing
-	set_gravity_scale(GRAVITY_SCALE)
+	gravity_scale = 0.0  # We'll handle gravity through FlightPhysics
 	
 	# Set up mesh references if not assigned in editor
 	if not fuselage_mesh and has_node("FuselageMesh"):
@@ -47,50 +50,29 @@ func _ready() -> void:
 	body_entered.connect(_on_collision_detected)
 
 func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+	# Always apply gravity
+	flight_physics.apply_gravity_force(state, mass)
+	
 	if not is_flying:
 		return
 	
 	# Get current velocity
 	flight_velocity = state.linear_velocity
 	
-	# Apply aerodynamic forces
-	_apply_drag_force(state)
-	_apply_basic_lift_force(state)
-
-func _apply_drag_force(state: PhysicsDirectBodyState3D) -> void:
-	"""Apply drag force opposing motion"""
-	if flight_velocity.length() < 0.1:
-		return
+	# Apply aerodynamic forces using FlightPhysics system
+	current_aerodynamic_data = flight_physics.apply_aerodynamic_forces(
+		self, state, lift_coefficient, drag_coefficient
+	)
 	
-	# Calculate drag force: F = 0.5 * ρ * v² * Cd * A
-	var velocity_squared = flight_velocity.length_squared()
-	var drag_magnitude = 0.5 * AIR_DENSITY * velocity_squared * drag_coefficient
+	# Check for stall conditions
+	is_stalled = flight_physics.check_stall_conditions(self, flight_velocity)
 	
-	# Apply drag opposite to velocity direction
-	var drag_force = -flight_velocity.normalized() * drag_magnitude
-	state.apply_central_force(drag_force)
-
-func _apply_basic_lift_force(state: PhysicsDirectBodyState3D) -> void:
-	"""Apply basic lift force based on forward velocity and orientation"""
-	# Only apply lift if moving forward with reasonable speed
-	if flight_velocity.length() < 2.0:
-		return
+	# Apply tumbling behavior if airplane is unbalanced or stalled
+	if is_unbalanced or is_stalled:
+		flight_physics.simulate_tumbling_behavior(self, state, is_unbalanced)
 	
-	# Get airplane's forward direction (negative Z in Godot)
-	var forward_direction = -global_transform.basis.z
-	
-	# Calculate forward velocity component
-	var forward_velocity = flight_velocity.dot(forward_direction)
-	
-	if forward_velocity > 0:
-		# Calculate lift force: simplified version based on forward speed
-		var lift_magnitude = 0.5 * AIR_DENSITY * forward_velocity * forward_velocity * lift_coefficient
-		
-		# Apply lift in the up direction relative to the airplane
-		var up_direction = global_transform.basis.y
-		var lift_force = up_direction * lift_magnitude
-		
-		state.apply_central_force(lift_force)
+	# Update flight state
+	_update_flight_state()
 
 func launch_airplane(initial_velocity: Vector3) -> void:
 	"""Launch the airplane with given initial velocity"""
@@ -112,17 +94,48 @@ func _on_collision_detected(body: Node) -> void:
 	if body.is_in_group("ground") or body.is_in_group("obstacles"):
 		stop_flight()
 
+func _update_flight_state() -> void:
+	"""Update flight state based on current conditions"""
+	
+	# Check if airplane has landed (low altitude and low speed)
+	if global_position.y < 1.0 and flight_velocity.length() < 2.0:
+		if is_flying:
+			stop_flight()
+
 func get_flight_data() -> Dictionary:
 	"""Return current flight data for tracking"""
-	return {
+	var base_data = {
 		"velocity": flight_velocity,
 		"speed": flight_velocity.length(),
 		"altitude": global_position.y,
 		"is_flying": is_flying,
+		"is_stalled": is_stalled,
+		"is_unbalanced": is_unbalanced,
 		"weight": airplane_weight,
 		"drag_coefficient": drag_coefficient,
 		"lift_coefficient": lift_coefficient
 	}
+	
+	# Add aerodynamic data if available
+	if current_aerodynamic_data:
+		base_data.merge({
+			"lift_force": current_aerodynamic_data.lift_force,
+			"drag_force": current_aerodynamic_data.drag_force,
+			"total_aerodynamic_force": current_aerodynamic_data.total_force,
+			"angle_of_attack": current_aerodynamic_data.angle_of_attack,
+			"airspeed": current_aerodynamic_data.airspeed
+		})
+	
+	return base_data
+
+func get_detailed_aerodynamic_info() -> Dictionary:
+	"""Get detailed aerodynamic information for debugging"""
+	if not flight_physics:
+		return {}
+	
+	return flight_physics.get_aerodynamic_info(
+		self, flight_velocity, lift_coefficient, drag_coefficient
+	)
 
 # Debug information
 func _to_string() -> String:
