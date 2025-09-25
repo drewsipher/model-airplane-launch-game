@@ -34,14 +34,14 @@
     - Implement basic distance measurement from launch point
     - _Requirements: 1.3, 6.4_
 
-- [ ] 4. Add mobile input system and touch controls
-  - [ ] 4.1 Implement MobileInputManager for touch handling
+- [x] 4. Add mobile input system and touch controls
+  - [x] 4.1 Implement MobileInputManager for touch handling
     - Create MobileInputManager singleton to process touch events
     - Write touch-to-3D position conversion methods
     - Convert launcher controls to touch-based drag gestures
     - _Requirements: 6.1, 6.2, 6.3_
 
-  - [ ] 4.2 Create touch-based camera controls
+  - [x] 4.2 Create touch-based camera controls
     - Add pinch-zoom and pan controls to flight camera
     - Implement smooth camera transitions and touch responsiveness
     - Create mobile-optimized camera bounds and constraints

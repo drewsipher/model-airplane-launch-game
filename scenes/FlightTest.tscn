@@ -1,12 +1,12 @@
-[gd_scene load_steps=8 format=3 uid="uid://c8y7x4qvnwqxf"]
+[gd_scene load_steps=9 format=3 uid="uid://c8y7x4qvnwqxf"]
 
-[ext_resource type="Script" path="res://scripts/FlightTestController.gd" id="1_flight_test"]
+[ext_resource type="Script" uid="uid://hdkmyj0tqvsn" path="res://scripts/FlightTestController.gd" id="1_flight_test"]
 [ext_resource type="PackedScene" uid="uid://bvqxj8n3qwxhm" path="res://scenes/airplane/BasicAirplane.tscn" id="2_airplane"]
-[ext_resource type="Script" path="res://scripts/components/ElasticBandLauncher.gd" id="3_launcher"]
-[ext_resource type="Script" path="res://scripts/components/FlightCamera.gd" id="4_flight_camera"]
+[ext_resource type="Script" uid="uid://dqy1iq8sr7e6e" path="res://scripts/components/ElasticBandLauncher.gd" id="3_launcher"]
+[ext_resource type="Script" uid="uid://btlrf1ibmc5l1" path="res://scripts/components/FlightCamera.gd" id="4_flight_camera"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_launcher_base"]
-size = Vector3(0.5, 0.2, 1.0)
+size = Vector3(3, 0.2, 5)
 
 [sub_resource type="BoxMesh" id="BoxMesh_elastic_band"]
 size = Vector3(0.1, 0.1, 0.8)
@@ -22,10 +22,10 @@ script = ExtResource("1_flight_test")
 
 [node name="ElasticBandLauncher" type="Node3D" parent="."]
 script = ExtResource("3_launcher")
-max_pull_distance = 3.0
 launch_force_multiplier = 8.0
 
 [node name="LauncherBase" type="MeshInstance3D" parent="ElasticBandLauncher"]
+transform = Transform3D(1, 0, 0, 0, 0.93002045, -0.36750782, 0, 0.36750782, 0.93002045, 0, 0.3683405, 0)
 mesh = SubResource("BoxMesh_launcher_base")
 
 [node name="ElasticBand" type="MeshInstance3D" parent="ElasticBandLauncher"]
@@ -47,7 +47,6 @@ transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -
 light_energy = 0.8
 
 [node name="Ground" type="StaticBody3D" parent="." groups=["ground"]]
-collision_layer = 1
 collision_mask = 0
 
 [node name="GroundMesh" type="MeshInstance3D" parent="Ground"]
