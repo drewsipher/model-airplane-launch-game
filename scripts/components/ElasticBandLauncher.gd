@@ -128,22 +128,20 @@ func update_pull(pull_input_position: Vector3) -> void:
 	# Calculate pull vector from launch position to input position
 	var pull_vector = pull_input_position - launch_position
 	
-	# Project onto the backwards direction (like drawing a bow)
-	var launch_forward = -global_transform.basis.z
-	var pull_backwards = -launch_forward
+	# Use a consistent backwards direction - use the launcher base's orientation if available
+	var launch_backwards: Vector3
+	if launcher_base:
+		# Use the launcher base's backwards direction (it's angled upward)
+		launch_backwards = launcher_base.global_transform.basis.z
+	else:
+		# Fallback to launcher's backwards direction
+		launch_backwards = global_transform.basis.z
 	
-	# Calculate how far back we're pulling
-	var pull_distance_raw = pull_vector.dot(pull_backwards)
-	pull_distance_raw = max(0.0, pull_distance_raw)  # Only allow pulling backwards
+	# Calculate how far back we're pulling along the launcher's backwards direction
+	var pull_distance_raw = pull_vector.dot(launch_backwards)
 	
-	# Clamp to maximum pull distance with elastic resistance
-	current_pull_distance = min(pull_distance_raw, max_pull_distance)
-	
-	# Add elastic resistance near the limit
-	if pull_distance_raw > max_pull_distance:
-		var excess = pull_distance_raw - max_pull_distance
-		var resistance_factor = 1.0 / (1.0 + excess * 2.0)  # Exponential resistance
-		current_pull_distance = max_pull_distance * resistance_factor
+	# Clamp between 0 and max_pull_distance - no pulling forward, no going over 100%
+	current_pull_distance = clamp(pull_distance_raw, 0.0, max_pull_distance)
 	
 	# Calculate normalized pull (0.0 to 1.0)
 	var pull_normalized = current_pull_distance / max_pull_distance
@@ -152,13 +150,17 @@ func update_pull(pull_input_position: Vector3) -> void:
 	var tension = band_tension_curve.sample(pull_normalized) if band_tension_curve else pull_normalized
 	
 	# Update visual feedback
-	_update_visual_feedback(pull_normalized, tension, pull_backwards)
+	_update_visual_feedback(pull_normalized, tension, launch_backwards)
 	
 	# Calculate launch force for feedback
 	var launch_force = tension * launch_force_multiplier
 	
 	# Emit update signal
 	pull_updated.emit(current_pull_distance, launch_force)
+	
+	# Debug output
+	if pull_normalized > 0.1:
+		print("Pulling back: %.1f%% (%.2fm)" % [pull_normalized * 100.0, current_pull_distance])
 	
 
 func release_pull() -> void:
@@ -173,12 +175,16 @@ func release_pull() -> void:
 	var tension = band_tension_curve.sample(pull_normalized) if band_tension_curve else pull_normalized
 	var launch_speed = tension * launch_force_multiplier
 	
-	# Launch direction (forward from launcher)
-	var launch_direction = -global_transform.basis.z  # Forward direction
-	var launch_velocity = launch_direction * launch_speed
+	# Launch direction - use launcher base's forward direction (matches the ramp angle)
+	var launch_direction: Vector3
+	if launcher_base:
+		# Use the launcher base's forward direction (angled upward like a ramp)
+		launch_direction = -launcher_base.global_transform.basis.z
+	else:
+		# Fallback to launcher's forward direction
+		launch_direction = -global_transform.basis.z
 	
-	# Add some upward component for realistic launch
-	launch_velocity.y += launch_speed * 0.3
+	var launch_velocity = launch_direction * launch_speed
 	
 	# Start elastic band snap animation
 	_animate_band_snap()
@@ -214,7 +220,7 @@ func _update_visual_feedback(pull_normalized: float, tension: float, pull_direct
 	
 	# Move elastic band backwards with the pull (like a ballista string)
 	if elastic_band and original_band_position != Vector3.ZERO:
-		# Move the band backwards based on pull distance
+		# Use the passed pull_direction (which is now the launcher base's direction)
 		var band_pull_offset = pull_direction * current_pull_distance * 0.8  # Band moves 80% of pull distance
 		elastic_band.position = original_band_position + band_pull_offset
 		
@@ -232,6 +238,7 @@ func _update_visual_feedback(pull_normalized: float, tension: float, pull_direct
 	
 	# Move airplane back based on pull (like drawing an arrow)
 	if airplane and airplane_attachment_point:
+		# Use the passed pull_direction (which matches the launcher's angle)
 		var pull_offset = pull_direction * current_pull_distance
 		airplane.global_position = original_airplane_position + pull_offset
 		
